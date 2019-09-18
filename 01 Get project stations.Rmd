@@ -1,0 +1,166 @@
+---
+title: "01 Get project stations"
+author: "DHJ"
+date: "18 9 2019"
+output: html_document
+---
+
+## 1 Libraries etc
+```{r}
+library(dplyr)
+library(purrr)
+library(ggplot2)
+library(safejoin)
+library(niRvana)
+
+# Get saimple map data (fro rough plotting)
+library(maps)
+library(mapdata)
+simple_map <- map_data("worldHires", c("Norway", "Sweden"))
+
+```
+
+## 2. Get project table  
+```{r}
+set_credentials()
+```
+
+```{r}
+df_projects <- get_projects()   # we call it 'df_projects' (the default name used by 'get_stations_from_project')
+```
+
+## 3. Indre Oslofjord  
+
+### All projects
+```{r}
+# get_stations_from_project("indre", ignore.case = TRUE)
+
+df_stations_all <- get_stations_from_project("indre", ignore.case = TRUE, keep_all = TRUE)
+
+df_stations_all %>% map_int(nrow)
+```
+
+### Pick project and add station cordinates
+```{r}
+df_stations_io <- df_stations_all[["Indre Oslofjord"]]
+
+df1 <- get_nivabase_selection("STATION_ID, GEOM_REF_ID", 
+                                   "STATIONS", 
+                                   "STATION_ID", 
+                                   df_stations_io$STATION_ID)
+df2 <- get_nivabase_selection("LONGITUDE, LATITUDE, SAMPLE_POINT_ID", 
+                              "SAMPLE_POINTS", 
+                              "SAMPLE_POINT_ID", 
+                              df1$GEOM_REF_ID, owner = "NIVA_GEOMETRY")
+
+df_stations_io <- df_stations_io %>%
+  safe_left_join(df1, check = "V") %>%
+  safe_left_join(df2, by = c("GEOM_REF_ID" = "SAMPLE_POINT_ID"), check = "V")
+
+```
+
+### Test map
+```{r}
+ggplot(df_stations_io, aes(LONGITUDE, LATITUDE)) +
+  annotation_map(simple_map, fill = "lightgreen") +
+  geom_point() +
+  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.003) +
+  coord_map("lambert", parameters = c(10.6, 59.8))
+```
+
+
+## 4. Ytre Oslofjord  
+
+### All projects
+```{r}
+get_stations_from_project("ytre", ignore.case = TRUE)
+
+df_stations_all <- get_stations_from_project("ytre", ignore.case = TRUE, keep_all = TRUE)
+
+df_stations_all %>% map_int(nrow)
+```
+
+### Pick project and add station cordinates
+```{r}
+df_stations_yo <- df_stations_all[["Ytre Oslofjord"]]
+
+df1 <- get_nivabase_selection("STATION_ID, GEOM_REF_ID", 
+                                   "STATIONS", 
+                                   "STATION_ID", 
+                                   df_stations_yo$STATION_ID)
+df2 <- get_nivabase_selection("LONGITUDE, LATITUDE, SAMPLE_POINT_ID", 
+                              "SAMPLE_POINTS", 
+                              "SAMPLE_POINT_ID", 
+                              df1$GEOM_REF_ID, owner = "NIVA_GEOMETRY")
+
+df_stations_yo <- df_stations_yo %>%
+  safe_left_join(df1, check = "V") %>%
+  safe_left_join(df2, by = c("GEOM_REF_ID" = "SAMPLE_POINT_ID"), check = "V")
+
+```
+
+### Test map
+```{r}
+
+ggplot(df_stations_yo, aes(LONGITUDE, LATITUDE)) +
+  annotation_map(simple_map, fill = "lightgreen") +
+  geom_point() +
+  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
+  coord_map("lambert", parameters = c(10.6, 59.8))
+  
+
+```
+
+## 5. Økokyst  
+
+### Pick project stations
+```{r}
+get_stations_from_project("økokyst", ignore.case = TRUE)
+
+df_stations_okokyst <- get_stations_from_project("ØKOKYST Skagerrak 2017-2020", 
+                                             ignore.case = FALSE)
+```
+
+### Pick stations
+```{r}
+df1 <- get_nivabase_selection("STATION_ID, GEOM_REF_ID", 
+                                   "STATIONS", 
+                                   "STATION_ID", 
+                                   df_stations_okokyst$STATION_ID)
+
+df2 <- get_nivabase_selection("LONGITUDE, LATITUDE, SAMPLE_POINT_ID", 
+                              "SAMPLE_POINTS", 
+                              "SAMPLE_POINT_ID", 
+                              df1$GEOM_REF_ID, owner = "NIVA_GEOMETRY")
+
+df_stations_okokyst <- df_stations_okokyst %>%
+  safe_left_join(df1, check = "V") %>%
+  safe_left_join(df2, by = c("GEOM_REF_ID" = "SAMPLE_POINT_ID"), check = "V")
+
+```
+
+### Test map
+```{r}
+
+ggplot(df_stations_okokyst, aes(LONGITUDE, LATITUDE)) +
+  annotation_map(simple_map, fill = "lightgreen") +
+  geom_point() +
+  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
+  coord_map("lambert", parameters = c(10.6, 59.8))
+  
+```
+
+## 6. Combine and save data
+```{r}
+df_stations <- bind_rows(
+  df_stations_io %>% mutate(Project = "Indre Oslofjord"),
+  df_stations_yo %>% mutate(Project = "Ytre Oslofjord"),
+  df_stations_okokyst %>% mutate(Project = "Økokyst")
+) %>%
+  select(Project, STATION_CODE, STATION_NAME, LONGITUDE, LATITUDE, everything()) %>%
+  select(-ENTERED_BY, -ENTERED_DATE)
+
+openxlsx::write.xlsx(df_stations, "01_Station_positions.xlsx")
+
+```
+
