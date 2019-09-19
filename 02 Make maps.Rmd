@@ -28,16 +28,16 @@ RColorBrewer::display.brewer.all()
 ```
 
 
-## Testing ranges
+## Data + find ranges
 ```{r}
-df_stations <- readxl::read_excel("01_Station_positions.xlsx") %>%
+df_stations <- readxl::read_excel("01_Station_positions_for_map.xlsx") %>%
   mutate(Project = factor(Project, levels = c("Indre Oslofjord", "Ytre Oslofjord", "Økokyst"))) # for right order
          
 apply(df_stations, 2, min)
 apply(df_stations, 2, max)
 
 df_stations %>% 
-  ggplot(aes(LONGITUDE, LATITUDE)) +
+  ggplot(aes(LONGITUDE, LATITUDE, color = Include)) +
   annotation_map(simple_map, fill = "lightgreen") +
   geom_point() +
   # geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
@@ -67,15 +67,14 @@ What is the projection?
 nc_eur <- st_read("K:/Kart/Kystshape/Europa/LinjeshapeE250")
 st_crs(nc_eur) <- "+proj=longlat +ellps=WGS84"
 
+xlim <- c(9.5, 11.5)
+ylim = c(58.8, 59.97)
+
+# pre-crop using sf_crop to speed up the plot!  
 ggplot(nc_eur) +
   geom_sf() +
   coord_sf(xlim = c(9.5, 11.5), ylim = c(58.8, 59.97), 
          expand = FALSE)
-
-head(nc_eur)
-
-x <- sf::st_sample(nc_eur, 1000)
-str(x, 1)
 
 ```
 
@@ -128,41 +127,48 @@ Map 1,2,3 are for 1) Indre Oslofjord, 2) Indre + Ytre Oslofjord, 3) all three pr
 ```{r}
 
 gg <- df_stations %>% 
-  filter(Project %in% "Indre Oslofjord") %>%
+  filter(!is.na(Include) & Project %in% "Indre Oslofjord") %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
   geom_point(aes(color = Project), size = 2.5) +
   scale_color_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
-            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
+            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97))
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
 # gg
 
 ggsave("Figures/02_map1_version1.png", gg)
 
 
 gg <- df_stations %>% 
-  filter(Project %in% c("Indre Oslofjord", "Ytre Oslofjord")) %>%
+  filter(!is.na(Include) & Project %in% c("Indre Oslofjord", "Ytre Oslofjord")) %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
   geom_point(aes(color = Project), size = 2.5) +
   scale_color_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
             xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
 # gg
 
 ggsave("Figures/02_map2_version1.png", gg)
 
 
 gg <- df_stations %>% 
+  filter(!is.na(Include)) %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
   geom_point(aes(color = Project), size = 2.5) +
   scale_color_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
             xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
 # gg
 
 ggsave("Figures/02_map3_version1.png", gg)
@@ -175,41 +181,49 @@ With points with black borders (pch = 21, and using 'fill' instead of 'color')
 ```{r}
 
 gg <- df_stations %>% 
-  filter(Project %in% "Indre Oslofjord") %>%
+  filter(!is.na(Include) & Project %in% "Indre Oslofjord") %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
   geom_point(aes(fill = Project), pch = 21, size = 2.5) +
   scale_fill_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
             xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
+  theme_minimal() +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
 # gg
 
 ggsave("Figures/02_map1_version2.png", gg)
 
 
 gg <- df_stations %>% 
-  filter(Project %in% c("Indre Oslofjord", "Ytre Oslofjord")) %>%
-  ggplot(aes(LONGITUDE, LATITUDE)) +
-  geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
-  geom_point(aes(fill = Project), pch = 21, size = 2.5) +
-  scale_color_manual(values = colors) +
-  coord_map("lambert", parameters = c(10.6, 59.8), 
-            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
-# gg
-
-ggsave("Figures/02_map2_version2.png", gg)
-
-
-gg <- df_stations %>% 
+  filter(!is.na(Include) & Project %in% c("Indre Oslofjord", "Ytre Oslofjord")) %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
   geom_point(aes(fill = Project), pch = 21, size = 2.5) +
   scale_fill_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
             xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme(axis.title = element_blank())
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
+# gg
+
+ggsave("Figures/02_map2_version2.png", gg)
+
+
+gg <- df_stations %>% 
+  filter(!is.na(Include)) %>%
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  geom_path(data = df_map, aes(x,y), color = "grey40", size = 0.3, na.rm = TRUE) + 
+  geom_point(aes(fill = Project), pch = 21, size = 2.5) +
+  scale_fill_manual(values = colors) +
+  coord_map("lambert", parameters = c(10.6, 59.8), 
+            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
+  theme(axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey95"))
 # gg
 
 ggsave("Figures/02_map3_version2.png", gg)

@@ -165,7 +165,7 @@ ggplot(df_stations_okokyst, aes(LONGITUDE, LATITUDE)) +
   
 ```
 
-## 6. Combine and save data
+## 6. Combine and save data   
 ```{r}
 df_stations <- bind_rows(
   df_stations_io %>% mutate(Project = "Indre Oslofjord"),
@@ -179,17 +179,22 @@ openxlsx::write.xlsx(df_stations, "01_Station_positions.xlsx")
 
 ```
 
-## 7. Post-save
+## 7. Post-save  
+`01_Station_positions.xlsx` is manually edited and saved as `01_Station_positions_for_map.xlsx`  
+* Based on mails from Anette + Louise  19. september 2019  
+* Extra column for points that should be included  
+* Also added SKJ-1 Skjebergkilen manually  
 ```{r}
-df_stations <- readxl::read_excel("01_Station_positions.xlsx")
+df_stations <- readxl::read_excel("01_Station_positions_for_map.xlsx")
 
 df_stations %>% 
-  filter(Project == "Økokyst") %>%
+  filter(!is.na(Include)) %>%
   ggplot(aes(LONGITUDE, LATITUDE)) +
   annotation_map(simple_map, fill = "lightgreen") +
-  geom_point() +
-  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
+  geom_point(aes(color = Project), size = 2.5) +
+  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.03) +
   coord_map("lambert", parameters = c(10.6, 59.8))
 
-
 ```
+
+
