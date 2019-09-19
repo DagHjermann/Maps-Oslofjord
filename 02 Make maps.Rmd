@@ -133,7 +133,7 @@ gg <- df_stations %>%
   geom_point(aes(color = Project), size = 2.5) +
   scale_color_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
-            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97))
+            xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
   theme(axis.title = element_blank(),
         panel.grid = element_blank(),
         panel.background = element_rect(fill = "grey95"))
@@ -188,7 +188,6 @@ gg <- df_stations %>%
   scale_fill_manual(values = colors) +
   coord_map("lambert", parameters = c(10.6, 59.8), 
             xlim = c(9.5, 11.5), ylim = c(58.8, 59.97)) +
-  theme_minimal() +
   theme(axis.title = element_blank(),
         panel.grid = element_blank(),
         panel.background = element_rect(fill = "grey95"))
