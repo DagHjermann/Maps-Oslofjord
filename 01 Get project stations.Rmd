@@ -3,7 +3,21 @@ title: "01 Get project stations"
 author: "DHJ"
 date: "18 9 2019"
 output: html_document
+    
 ---
+
+From: Anette Engesmo <Anette.Engesmo@niva.no> 
+Sent: fredag 13. september 2019 10:53
+To: Dag Øystein Hjermann <Dag.Hjermann@niva.no>
+Cc: Louise Valestrand <Louise.Valestrand@niva.no>
+Subject: Oslofjorden kart
+
+Hei Dag,
+
+Jeg og Louise skal holde et innlegg på Forskningsdagene om miljøovervåkning i Oslofjorden, og jeg lurte på om du kan hjelpe meg med noen veldig enkle kart? Jeg trenger ett som bare viser Oslofjorden (enkelt, kanskje med noen få stedsnavn), deretter det samme kartet med stasjonsnettet for Indre Oslofjord overvåkningen, deretter et med IO og ytre oslofjord overvåkningen, og tilslutt ett med IO, YO og ØKOKYST-stasjonene. Det kan gjerne være bare prikker (ikke navn) for stasjonene, litt store og med klare farger (en farge per overvåkningsprogram).
+Kan du hjelpe oss med det?
+
+
 
 ## 1 Libraries etc
 ```{r}
@@ -16,6 +30,7 @@ library(niRvana)
 # Get saimple map data (fro rough plotting)
 library(maps)
 library(mapdata)
+very_simple_map <- map_data("world", c("Norway", "Sweden"))
 simple_map <- map_data("worldHires", c("Norway", "Sweden"))
 
 ```
@@ -164,3 +179,17 @@ openxlsx::write.xlsx(df_stations, "01_Station_positions.xlsx")
 
 ```
 
+## 7. Post-save
+```{r}
+df_stations <- readxl::read_excel("01_Station_positions.xlsx")
+
+df_stations %>% 
+  filter(Project == "Økokyst") %>%
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(simple_map, fill = "lightgreen") +
+  geom_point() +
+  geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
+  coord_map("lambert", parameters = c(10.6, 59.8))
+
+
+```
