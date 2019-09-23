@@ -62,7 +62,8 @@ gg_background
 ```
 
 ### Europe map  
-What is the projection?  
+What is the projection?    
+* NOTE: SLOW! 3-4 minutes
 ```{r}
 nc_eur <- st_read("K:/Kart/Kystshape/Europa/LinjeshapeE250")
 st_crs(nc_eur) <- "+proj=longlat +ellps=WGS84"
@@ -70,7 +71,7 @@ st_crs(nc_eur) <- "+proj=longlat +ellps=WGS84"
 xlim <- c(9.5, 11.5)
 ylim = c(58.8, 59.97)
 
-# pre-crop using sf_crop to speed up the plot!  
+# SHOULD pre-crop using sf_crop to speed up the plot!  
 ggplot(nc_eur) +
   geom_sf() +
   coord_sf(xlim = c(9.5, 11.5), ylim = c(58.8, 59.97), 
@@ -193,7 +194,7 @@ gg <- df_stations %>%
         panel.background = element_rect(fill = "grey95"))
 # gg
 
-ggsave("Figures/02_map1_version2.png", gg)
+ggsave("Figures/02_map1_version2.png", gg, dpi = 500)
 
 
 gg <- df_stations %>% 
@@ -209,7 +210,7 @@ gg <- df_stations %>%
         panel.background = element_rect(fill = "grey95"))
 # gg
 
-ggsave("Figures/02_map2_version2.png", gg)
+ggsave("Figures/02_map2_version2.png", gg, dpi = 500)
 
 
 gg <- df_stations %>% 
@@ -225,7 +226,7 @@ gg <- df_stations %>%
         panel.background = element_rect(fill = "grey95"))
 # gg
 
-ggsave("Figures/02_map3_version2.png", gg)
+ggsave("Figures/02_map3_version2.png", gg, dpi = 500)
 
 ```
 
