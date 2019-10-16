@@ -1,0 +1,186 @@
+---
+title: "03 Lake maps (all of Norway)"
+author: "DHJ"
+date: "19 9 2019"
+output: 
+  html_document:
+    keep_md: true
+---
+
+For a completely different project than script 01 and 02  
+
+## Libs + map data
+```{r, fig.height=7}
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(readxl)
+
+library(maps)
+library(mapdata)
+
+# R map
+# simple_map <- map_data("worldHires", "Norway")
+# Somewhat better map
+load("K:/Avdeling/214-Oseanografi/DHJ/Data/Maps/Norway_coastline_longlat2.RData")
+
+# Clean away some Finnish lakes :-)
+norway_coast_longlat2 <- norway_coast_longlat2 %>%
+  filter(!(long>27 & long<28 & lat<69.1))
+
+library(RColorBrewer)
+
+# RColorBrewer::display.brewer.all()
+
+```
+
+
+## Data + find ranges
+```{r, warning=FALSE}
+fn <- "Copy of eDNA liste over prøvelokaliteter per 16.10.19 Guttorm.xlsx"
+df_stations <- readxl::read_excel(
+  fn, 
+  col_types = c("numeric", "text", "text", "numeric", "numeric"),
+  range = "A1:E100"
+  ) %>%
+  filter(!is.na(Innsjø)) %>%
+  rename(LATITUDE = `Posisjon - midt i vannet`,
+         LONGITUDE = X__1)
+
+sel <- df_stations$Innsjø == "Kråkstadelva"
+df_stations$LATITUDE[sel] <- 59.7550576
+df_stations$LONGITUDE[sel] <- 10.0105251
+
+
+df_stations
+
+```
+
+
+## Map 1
+```{r}
+df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, fill = "lightgreen") +
+  geom_point() +
+  # geom_text(aes(label = STATION_CODE), hjust = 0, nudge_x = 0.01) +
+  coord_map("lambert", parameters = c(13, 65), 
+            xlim = c(3, 34), ylim = c(58, 73))
+#  theme_void()
+
+```
+
+## Map 2
+```{r}
+col1 <- RColorBrewer::brewer.pal(8, "Set2")[7]
+# col2 <- RColorBrewer::brewer.pal(8, "GnBu")[4]
+col2 <- RColorBrewer::brewer.pal(8, "Greens")[3]
+col3 <- "grey20"
+pointfill3 <- "orangered3"
+bg3 <- "midnightblue"
+
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col1, color = "grey35")  +
+  geom_point(pch = 21, fill = "black", color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(27, 70), 
+            xlim = c(20, 32), ylim = c(68, 71.5)) +
+  theme_void()
+gg
+ggsave("Figures/03_map_finnmark_col1.png", gg, dpi = 400)
+
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col2, color = "grey35")  +
+  geom_point(pch = 21, fill = "black", color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(27, 70), 
+            xlim = c(20, 32), ylim = c(68, 71.5)) +
+  theme_void()
+gg
+ggsave("Figures/03_map_finnmark_col2.png", gg, dpi = 400)
+
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col3, color = "grey85")  +
+  geom_point(pch = 21, fill = pointfill3, color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(27, 70), 
+            xlim = c(20, 32), ylim = c(68, 71.5)) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = bg3))
+gg
+ggsave("Figures/03_map_finnmark_col3.png", gg, dpi = 400)
+
+
+```
+
+## Map 3  
+
+
+```{r, warning=FALSE}
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col1, color = "grey35")  +
+  geom_point(pch = 21, fill = "black", color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(8, 59), 
+            xlim = c(5, 13), ylim = c(58, 60.1)) +
+  theme_void()
+
+ggsave("Figures/03_map_sørnorge_col1.png", gg, 
+       height = 4.5, width = 7, dpi = 400)
+gg
+
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col2, color = "grey35")  +
+  geom_point(pch = 21, fill = "black", color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(8, 59), 
+            xlim = c(5, 13), ylim = c(58, 60.1)) +
+  theme_void()
+
+ggsave("Figures/03_map_sørnorge_col2.png", gg, 
+       height = 4.5, width = 7, dpi = 400)
+gg
+
+gg <- df_stations %>% 
+  ggplot(aes(LONGITUDE, LATITUDE)) +
+  annotation_map(norway_coast_longlat2, aes(long, lat), fill = col3, color = "grey85")  +
+  geom_point(pch = 21, fill = pointfill3, color = "white", size = rel(3)) +
+  coord_map("lambert", parameters = c(8, 59), 
+            xlim = c(5, 13), ylim = c(57.8, 60.1)) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = bg3))
+gg
+ggsave("Figures/03_map_østlandet_col3.png", gg, 
+       height = 4.5, width = 7, dpi = 400)
+
+```
+
+
+## Map 4
+```{r}
+mapfolder <- "../../Star-walk/Nat_earth"
+dir(mapfolder)
+
+nc <- st_read(paste0(mapfolder, '/ne_10m_land/ne_10m_land.shp'))
+nc_islands <- st_read(paste0(mapfolder, '/ne_10m_minor_islands/ne_10m_minor_islands.shp'))
+
+# From https://gis.stackexchange.com/a/230914
+nc2 <- st_intersection(
+  nc, 
+  st_set_crs(st_as_sf(as(raster::extent(3, 13, 58, 60.5), "SpatialPolygons")), st_crs(nc))
+  )
+nc_islands2 <- st_intersection(
+  nc_islands, 
+  st_set_crs(st_as_sf(as(raster::extent(3, 13, 58, 60.5), "SpatialPolygons")), st_crs(nc))
+  )
+
+ggplot(nc2) +
+  geom_sf(fill = "palegreen3") +
+  geom_sf(data = nc_islands2, fill = "royalblue3") +
+  coord_sf( xlim = c(3, 13), ylim = c(58, 60.5), 
+         expand = FALSE) 
+
+
+```
+
+
