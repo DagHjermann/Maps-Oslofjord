@@ -22,6 +22,7 @@ library(mapdata)
 # R map
 # simple_map <- map_data("worldHires", "Norway")
 # Somewhat better map
+# (Coastline extracted from K:\\Kart\\N1000\\norge2.shp)
 load("K:/Avdeling/214-Oseanografi/DHJ/Data/Maps/Norway_coastline_longlat2.RData")
 
 # Clean away some Finnish lakes :-)
@@ -57,7 +58,8 @@ df_stations
 ```
 
 
-## Map 1
+## Map 1 - all of Norway  
+Using 
 ```{r}
 df_stations %>% 
   ggplot(aes(LONGITUDE, LATITUDE)) +
@@ -70,7 +72,7 @@ df_stations %>%
 
 ```
 
-## Map 2
+## Map  - Finnmark
 ```{r}
 col1 <- RColorBrewer::brewer.pal(8, "Set2")[7]
 # col2 <- RColorBrewer::brewer.pal(8, "GnBu")[4]
@@ -113,9 +115,7 @@ ggsave("Figures/03_map_finnmark_col3.png", gg, dpi = 400)
 
 ```
 
-## Map 3  
-
-
+## Map 3 - South Norway
 ```{r, warning=FALSE}
 gg <- df_stations %>% 
   ggplot(aes(LONGITUDE, LATITUDE)) +
@@ -156,7 +156,9 @@ ggsave("Figures/03_map_østlandet_col3.png", gg,
 ```
 
 
-## Map 4
+## Map 4 - South Norway using Natural earth  
+Including data set for 'small islands'  
+But seems to lack 'medium islands', i.e. Nøtterøy and Tjøme  
 ```{r}
 mapfolder <- "../../Star-walk/Nat_earth"
 dir(mapfolder)
